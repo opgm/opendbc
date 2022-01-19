@@ -37,7 +37,7 @@ NS_ :
 
 BS_:
 
-BU_: XXX DSU HCU EPS IPAS CGW
+BU_: XXX DSU HCU EPS IPAS CGW BGM
 
 BO_ 36 KINEMATICS: 8 XXX
  SG_ ACCEL_Y : 33|10@0+ (0.03589,-18.375) [0|65535] "m/s^2" XXX
@@ -167,6 +167,9 @@ BO_ 951 ESP_CONTROL: 8 ESP
  SG_ BRAKE_HOLD_ENABLED : 33|1@1+ (1,0) [0|1] "" XXX
  SG_ BRAKE_HOLD_ACTIVE : 36|1@0+ (1,0) [0|1] "" XXX
 
+BO_ 1005 REVERSE_CAMERA_STATE: 2 BGM
+ SG_ REVERSE_CAMERA_GUIDELINES : 9|2@0+ (1,0) [1|3] "" XXX
+
 BO_ 1020 SOLAR_SENSOR: 8 XXX
  SG_ LUX_SENSOR : 55|13@0+ (1,0) [0|0] "" XXX
 
@@ -227,6 +230,11 @@ BO_ 1409 VIN_PART_2: 8 CGW
 
 BO_ 1410 VIN_PART_3: 8 CGW
  SG_ VIN_17 : 7|8@0+ (1,0) [0|0] "" XXX
+
+BO_ 1552 BODY_CONTROL_STATE_2: 8 XXX
+ SG_ METER_SLIDER_BRIGHTNESS_PCT : 30|7@0+ (1,0) [12|100] "%" XXX
+ SG_ METER_SLIDER_LOW_BRIGHTNESS : 37|1@0+ (1,0) [0|1] "" XXX
+ SG_ METER_SLIDER_DIMMED : 38|1@0+ (1,0) [0|1] "" XXX
 
 BO_ 1553 UI_SETTING: 8 XXX
  SG_ UNITS : 26|2@0+ (1,0) [0|3] "" XXX
@@ -344,6 +352,9 @@ CM_ SG_ 1163 OVSPVALL "-5 at start then 2 after 2 seconds";
 CM_ SG_ 1163 OVSPVALM "-5 at start then 5 after 2 seconds";
 CM_ SG_ 1163 OVSPVALH "-5 at start then 10 after 2 seconds";
 CM_ SG_ 1163 TSRSPU "always 1";
+CM_ SG_ 1552 METER_SLIDER_BRIGHTNESS_PCT "Combination display brightness setting, scales from 12 per cent to 100 per cent, reflects combination meter settings only, not linked with headlight state";
+CM_ SG_ 1552 METER_SLIDER_LOW_BRIGHTNESS "Combination display low brightness mode, also controls footwell lighting";
+CM_ SG_ 1552 METER_SLIDER_DIMMED "Combination display slider not at max, reflects combination meter settings only, not linked with headlight state";
 CM_ SG_ 1553 ODOMETER "Unit is dependent upon units signal";
 
 VAL_ 466 CRUISE_STATE 11 "timer_3sec" 10 "adaptive click down" 9 "adaptive click up" 8 "adaptive engaged" 7 "standstill" 6 "non-adaptive click up" 5 "non-adaptive click down" 4 "non-adaptive hold down" 3 "non-adaptive hold up" 2 "non-adaptive being engaged" 1 "non-adaptive engaged" 0 "off";
@@ -356,6 +367,7 @@ VAL_ 835 ACC_MALFUNCTION 1 "faulted" 0 "ok";
 VAL_ 835 ACC_CUT_IN 1 "CUT-IN Detected" 0 "clear";
 VAL_ 835 ALLOW_LONG_PRESS 2 "set speed increase by 5 speed units regardless" 1 "set speed increase by 1 speed unit on short press, 5 speed units on long press";
 VAL_ 921 CRUISE_CONTROL_STATE 2 "disabled" 11 "hold" 10 "hold_waiting_user_cmd" 6 "enabled" 5 "faulted";
+VAL_ 1005 REVERSE_CAMERA_GUIDELINES 3 "No guidelines" 2 "Static guidelines" 1 "Active guidelines";
 VAL_ 1041 PCS_INDICATOR 2 "PCS Faulted" 1 "PCS Turned Off By User" 0 "PCS Enabled";
 VAL_ 1041 PCS_SENSITIVITY 64 "high sensitivity"  128 "mid sensitivity" 192 "low sensitivity" 0 "off";
 VAL_ 1042 LDA_ALERT 3 "hold with continuous beep" 2 "LDA unavailable" 1 "hold" 0 "none";
@@ -369,6 +381,8 @@ VAL_ 1161 TSGN2 1 "speed sign" 0 "none";
 VAL_ 1161 SPLSGN2 15 "conditional blank" 4 "wet road" 5 "rain" 0 "none";
 VAL_ 1162 TSGN3 0 "none" 1 "speed sign" 2 "0 unlimited" 7 "unlimited" 16 "highway" 17 "no highway" 18 "motorway" 19 "no motorway" 20 "in city" 21 "outside city" 22 "pedestrian area" 23 "no pedestrian area" 65 "no overtaking left" 66 "no overtaking right" 67 "overtaking allowed again" 81 "no right turn" 97 "stop" 105 "yield" 113 "stop" 114 "yield us" 129 "no entry" 138 "no entry tss2" 145 "do not enter";
 VAL_ 1162 SPLSGN3 15 "conditional blank" 4 "wet road" 5 "rain" 0 "none";
+VAL_ 1552 METER_SLIDER_LOW_BRIGHTNESS 1 "Low brightness mode, footwell lights off" 0 "Normal mode, footwell lights on";
+VAL_ 1552 METER_SLIDER_DIMMED 1 "Dimmed" 0 "Not Dimmed";
 
 
 
