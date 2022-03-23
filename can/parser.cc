@@ -274,7 +274,7 @@ void CANParser::UpdateValid(uint64_t sec) {
     const auto& state = kv.second;
     if (state.check_threshold > 0 && (sec - state.seen) > state.check_threshold) {
       if (state.seen > 0) {
-        WARN("0x%X TIMEOUT\n", state.address);
+        WARN("0x%X TIMEOUT\n", state.address); //TODO: Need bus also
       } else {
         WARN("0x%X MISSING\n", state.address);
       }
