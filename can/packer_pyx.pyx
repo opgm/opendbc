@@ -10,6 +10,7 @@ from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY
 
 from .common cimport CANPacker as cpp_CANPacker
 from .common cimport dbc_lookup, SignalPackValue, DBC
+from typing import Union
 
 
 cdef class CANPacker:
@@ -43,9 +44,9 @@ cdef class CANPacker:
 
     return self.packer.pack(addr, values_thing, counter)
 
-  cpdef make_can_msg(self, name_or_addr, bus, values, counter=-1):
+  cpdef make_can_msg(self, name_or_addr: str | int, bus: int, values, counter: int =-1):
     cdef int addr, size
-    if type(name_or_addr) == int:
+    if isinstanceof(name_or_addr, int):
       addr = name_or_addr
       size = self.address_to_size[name_or_addr]
     else:
