@@ -40,7 +40,13 @@ BU_: K182_PACM K43_PSCM K17_EBCM NEO K124_ASCM
 BO_ 823 PACMParkAssitCmd: 7 NEO
  SG_ RollingCounter : 35|2@0+ (1,0) [0|0] ""  NEO
  SG_ SteeringWheelChecksum : 47|16@0+ (1,0) [0|0] ""  NEO
- SG_ SteeringWheelCmd : 23|16@0+ (1,0) [0|0] ""  NEO
+ SG_ SteeringWheelCmd : 23|16@0- (1,0) [0|0] ""  NEO
+ SG_ RequestActive : 9|1@0+ (1,0) [0|1] "" XXX
+ SG_ InvRollingCounter : 5|2@0+ (1,0) [0|1] "" XXX
+ SG_ RollingCounter2 : 1|2@0+ (1,0) [0|1] "" XXX
+ SG_ Zero_If_Centered_1 : 32|1@0+ (1,0) [0|1] "" XXX
+ SG_ Zero_If_Centered_2 : 33|1@0+ (1,0) [0|1] "" XXX
+ SG_ RequestActiveRisingEdge : 3|1@0+ (1,0) [0|1] "" XXX
 
 BO_ 560 EBCMRegen: 6 K17_EBCM
  SG_ Regen : 1|10@0+ (1,0) [0|0] ""  NEO
