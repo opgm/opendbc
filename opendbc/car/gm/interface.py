@@ -247,6 +247,16 @@ class CarInterface(CarInterfaceBase):
       ret.openpilotLongitudinalControl = True
       ret.autoResumeSng = True
 
+    elif candidate in CC_ONLY_CAR:
+      ret.alphaLongitudinalAvailable = True
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_CC_LONG.value
+      if alpha_long:
+        ret.openpilotLongitudinalControl = True
+        ret.flags |= GMFlags.CC_LONG.value
+      ret.radarUnavailable = True
+      ret.minEnableSpeed = 24 * CV.MPH_TO_MS
+      ret.pcmCruise = True
+
     if candidate in CC_ONLY_CAR:
       ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_ACC.value
 
