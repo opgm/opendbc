@@ -1,7 +1,7 @@
 from typing import NamedTuple
 
 from opendbc.car.chrysler.values import CAR as CHRYSLER
-from opendbc.car.gm.values import CAR as GM
+from opendbc.car.gm.values import CAR as GM, CC_ONLY_CAR
 from opendbc.car.ford.values import CAR as FORD
 from opendbc.car.honda.values import CAR as HONDA
 from opendbc.car.hyundai.values import CAR as HYUNDAI
@@ -28,6 +28,8 @@ non_tested_cars = [
   SUBARU.SUBARU_FORESTER_HYBRID,
   TESLA.TESLA_MODEL_3,
 ]
+
+non_tested_cars.extend(CC_ONLY_CAR)
 
 
 class CarTestRoute(NamedTuple):
