@@ -206,12 +206,6 @@ class CarState(CarStateBase):
     if CP.enableBsm:
       pt_messages.append(("BCMBlindSpotMonitor", 10))
 
-    cam_messages = []
-    if CP.networkLocation == NetworkLocation.fwdCamera:
-      pt_messages += [
-        ("ASCMLKASteeringCmd", 0),
-      ]
-
     if CP.transmissionType == TransmissionType.direct:
       pt_messages += [
         ("EBCMRegenPaddle", 50),
