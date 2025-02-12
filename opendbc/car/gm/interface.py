@@ -245,6 +245,26 @@ class CarInterface(CarInterfaceBase):
       ret.openpilotLongitudinalControl = True
       ret.autoResumeSng = True
 
+    elif candidate in CC_ONLY_CAR:
+      ret.alphaLongitudinalAvailable = True
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_CC_LONG.value
+      if alpha_long:
+        ret.openpilotLongitudinalControl = True
+        ret.flags |= GMFlags.CC_LONG.value
+      ret.radarUnavailable = True
+      ret.minEnableSpeed = 24 * CV.MPH_TO_MS
+      ret.pcmCruise = True
+      # REDNECK TUNING:
+      ret.longitudinalTuning.kpBP = [10.7, 10.8, 28.]  # 10.7 m/s == 24 mph
+      ret.longitudinalTuning.kpV = [0., 20., 20.]  # set lower end to 0 since we can't drive below that speed
+      ret.longitudinalTuning.deadzoneBPDEPRECATED = [0.]
+      ret.longitudinalTuning.deadzoneVDEPRECATED = [0.56]  # == 2 km/h/s, 1.25 mph/s
+      ret.longitudinalActuatorDelay = 1.  # TODO: measure this
+      ret.longitudinalTuning.kiBP = [0.]
+      ret.longitudinalTuning.kiV = [0.1]
+      ret.stoppingDecelRate = 11.18  # == 25 mph/s (.04 rate)
+      ret.longitudinalTuning.kf = 0.
+
     if candidate in CC_ONLY_CAR:
       ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_ACC.value
 
