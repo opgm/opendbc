@@ -32,6 +32,7 @@ static GmHardware gm_hw = GM_ASCM;
 static bool gm_pcm_cruise = false;
 static bool gm_has_acc = true;
 static bool gm_pedal_long = false;
+static bool gm_cc_long = false;
 
 static void gm_rx_hook(const CANPacket_t *msg) {
   const int GM_STANDSTILL_THRSLD = 10;  // 0.311kph
@@ -53,7 +54,7 @@ static void gm_rx_hook(const CANPacket_t *msg) {
     }
 
     // ACC steering wheel buttons (GM_CAM is tied to the PCM)
-    if ((msg->addr == 0x1E1U) && !gm_pcm_cruise) {
+    if ((msg->addr == 0x1E1U) && (!gm_pcm_cruise || gm_cc_long)) {
       int button = (msg->data[5] & 0x70U) >> 4;
 
       // enter controls on falling edge of set or rising edge of resume (avoids fault)
@@ -96,7 +97,11 @@ static void gm_rx_hook(const CANPacket_t *msg) {
     // Cruise check for CC only cars
     if ((msg->addr == 0x3D1U) && !gm_has_acc) {
       bool cruise_engaged = (msg->data[4] >> 7) != 0U;
-      cruise_engaged_prev = cruise_engaged;
+      if (gm_cc_long) {
+        pcm_cruise_check(cruise_engaged);
+      } else {
+        cruise_engaged_prev = cruise_engaged;
+      }
     }
 
     if (msg->addr == 0xBDU) {
@@ -172,11 +177,16 @@ static bool gm_tx_hook(const CANPacket_t *msg) {
   }
 
   // BUTTONS: used for resume spamming and cruise cancellation with stock longitudinal
-  if ((msg->addr == 0x1E1U) && (gm_pcm_cruise || gm_pedal_long)) {
+  if ((msg->addr == 0x1E1U) && (gm_pcm_cruise || gm_pedal_long || gm_cc_long)) {
     int button = (msg->data[5] >> 4) & 0x7U;
 
-    bool allowed_cancel = (button == 6) && cruise_engaged_prev;
-    if (!allowed_cancel) {
+    bool allowed_btn = (button == GM_BTN_CANCEL) && cruise_engaged_prev;
+    // For standard CC, allow spamming of SET / RESUME
+    if (gm_cc_long) {
+      allowed_btn |= cruise_engaged_prev && ((button == GM_BTN_SET) || (button == GM_BTN_RESUME) || (button == GM_BTN_UNPRESS));
+    }
+
+    if (!allowed_btn) {
       tx = false;
     }
   }
@@ -200,7 +210,8 @@ static safety_config gm_init(uint16_t param) {
 
   static const CanMsg GM_ASCM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x409, 0, 7, .check_relay = false},
                                            {0x40A, 0, 7, .check_relay = false}, {0x2CB, 0, 8, .check_relay = true},
-                                           {0x370, 0, 6, .check_relay = false}, {0x200, 0, 6, .check_relay = false},  // pt bus
+                                           {0x370, 0, 6, .check_relay = false}, {0x200, 0, 6, .check_relay = false},
+                                           {0x1E1, 0, 7, .check_relay = false}, // pt bus
                                            {0xA1, 1, 7, .check_relay = false}, {0x306, 1, 8, .check_relay = false},
                                            {0x308, 1, 7, .check_relay = false}, {0x310, 1, 2, .check_relay = false},   // obs bus
                                            {0x315, 2, 5, .check_relay = false}};  // ch bus
@@ -216,7 +227,7 @@ static safety_config gm_init(uint16_t param) {
   // block PSCMStatus (0x184); forwarded through openpilot to hide an alert from the camera
   static const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x315, 0, 5, .check_relay = true},
                                                {0x2CB, 0, 8, .check_relay = true}, {0x370, 0, 6, .check_relay = true},
-                                               {0x200, 0, 6, .check_relay = false},  // pt bus
+                                               {0x200, 0, 6, .check_relay = false}, {0x1E1, 0, 7, .check_relay = false},  // pt bus
                                                {0x184, 2, 8, .check_relay = true}};  // camera bus
 
 
@@ -249,8 +260,14 @@ static safety_config gm_init(uint16_t param) {
     {.msg = {{0x201, 0, 6, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // pedal
   };
 
-  static const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x200, 0, 6, .check_relay = false},  // pt bus
+  static const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x200, 0, 6, .check_relay = false},
+                                          {0x1E1, 0, 7, .check_relay = false},  // pt bus
                                           {0x1E1, 2, 7, .check_relay = false}, {0x184, 2, 8, .check_relay = true}};  // camera bus
+
+
+  static const CanMsg GM_CC_LONG_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x1E1, 0, 7, .check_relay = false},  // pt bus
+                                              {0x184, 2, 8, .check_relay = true}, {0x1E1, 2, 7, .check_relay = false}};  // camera bus
+
 
   gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
 
@@ -263,6 +280,9 @@ static safety_config gm_init(uint16_t param) {
 
   const uint16_t GM_PARAM_PEDAL_LONG = 32;
   gm_pedal_long = GET_FLAG(param, GM_PARAM_PEDAL_LONG);
+
+  const uint16_t GM_PARAM_CC_LONG = 64;
+  gm_cc_long = GET_FLAG(param, GM_PARAM_CC_LONG);
 
   const uint16_t GM_PARAM_HW_CAM_LONG = 2;
   bool gm_cam_long = GET_FLAG(param, GM_PARAM_HW_CAM_LONG);
@@ -279,7 +299,13 @@ static safety_config gm_init(uint16_t param) {
     // FIXME: cppcheck thinks that gm_cam_long is always false. This is not true
     // if ALLOW_DEBUG is defined but cppcheck is run without ALLOW_DEBUG
     // cppcheck-suppress knownConditionTrueFalse
-    ret = gm_cam_long ? BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_LONG_TX_MSGS) : BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_TX_MSGS);
+    if (gm_cc_long) {
+      ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_CC_LONG_TX_MSGS);
+    } else if (gm_cam_long) {
+      ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_LONG_TX_MSGS);
+    } else {
+      ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_TX_MSGS);
+    }
   } else {
     ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_ASCM_TX_MSGS);
   }
@@ -296,7 +322,7 @@ static safety_config gm_init(uint16_t param) {
   } else {}
 
   // ASCM does not forward any messages
-  if (gm_hw == GM_ASCM) {
+  if ((gm_hw == GM_ASCM) || gm_cc_long) {
     ret.disable_forwarding = true;
   }
   return ret;
