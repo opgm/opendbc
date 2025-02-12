@@ -63,6 +63,7 @@ class CarControllerParams:
 class GMSafetyFlags(IntFlag):
   HW_CAM = 1
   HW_CAM_LONG = 2
+  FLAG_GM_NO_CAMERA = 4
 
 
 @dataclass
@@ -208,6 +209,9 @@ class CanBus:
   CHASSIS = 2
   LOOPBACK = 128
   DROPPED = 192
+
+class GMFlags(IntFlag):
+  NO_CAMERA = 1
 
 
 # In a Data Module, an identifier is a string used to recognize an object,
