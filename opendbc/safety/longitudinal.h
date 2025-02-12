@@ -33,3 +33,7 @@ bool longitudinal_brake_checks(int desired_brake, const LongitudinalLimits limit
   violation |= desired_brake > limits.max_brake;
   return violation;
 }
+
+bool longitudinal_interceptor_checks(const CANPacket_t *to_send) {
+  return (!get_longitudinal_allowed() || brake_pressed_prev) && (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1));
+}
