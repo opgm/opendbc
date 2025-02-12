@@ -206,12 +206,6 @@ class CarState(CarStateBase):
     if CP.enableBsm:
       pt_messages.append(("BCMBlindSpotMonitor", 10))
 
-    if CP.transmissionType == TransmissionType.direct:
-      pt_messages += [
-        ("EBCMRegenPaddle", 50),
-        ("EVDriveMode", 0),
-      ]
-
     if CP.enableGasInterceptorDEPRECATED:
       pt_messages += [
         ("GAS_SENSOR", 50),
