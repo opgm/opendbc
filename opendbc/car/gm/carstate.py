@@ -212,11 +212,6 @@ class CarState(CarStateBase):
         ("EVDriveMode", 0),
       ]
 
-    if CP.carFingerprint in CC_ONLY_CAR:
-      pt_messages += [
-        ("ECMCruiseControl", 10),
-      ]
-
     if CP.enableGasInterceptorDEPRECATED:
       pt_messages += [
         ("GAS_SENSOR", 50),
@@ -228,7 +223,7 @@ class CarState(CarStateBase):
         ("ASCMLKASteeringCmd", 10),
       ]
 
-      if CP.carFingerprint in ALT_ACCS:
+      if CP.carFingerprint in ALT_ACCS | CC_ONLY_CAR:
         pt_messages.append(("ECMCruiseControl", 10))
       elif CP.carFingerprint not in CC_ONLY_CAR:
         cam_messages.append(("ASCMActiveCruiseControlStatus", 25))
