@@ -23,9 +23,11 @@ class CarController(CarControllerBase):
     self.apply_torque_last = 0
     self.apply_gas = 0
     self.apply_brake = 0
+    self.apply_speed = 0
     self.last_steer_frame = 0
     self.last_button_frame = 0
     self.cancel_counter = 0
+    self.pedal_steady = 0.
 
     self.lka_steering_cmd_counter = 0
     self.lka_icon_status_last = (False, False)
@@ -119,6 +121,10 @@ class CarController(CarControllerBase):
 
         at_full_stop = CC.longActive and CS.out.standstill
         near_stop = CC.longActive and (abs(CS.out.vEgo) < self.params.NEAR_STOP_BRAKE_PHASE)
+        if self.CP.flags & GMFlags.CC_LONG.value:
+          if CC.longActive and CS.out.vEgo > self.CP.minEnableSpeed:
+            # Using extend instead of append since the message is only sent intermittently
+            can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
         if self.CP.enableGasInterceptorDEPRECATED:
           can_sends.append(create_gas_interceptor_command(self.packer_pt, interceptor_gas_cmd, idx))
         if self.CP.carFingerprint not in CC_ONLY_CAR:
@@ -188,6 +194,7 @@ class CarController(CarControllerBase):
     new_actuators.torqueOutputCan = self.apply_torque_last
     new_actuators.gas = self.apply_gas
     new_actuators.brake = self.apply_brake
+    new_actuators.speed = self.apply_speed
 
     self.frame += 1
     return new_actuators, can_sends

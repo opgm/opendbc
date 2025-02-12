@@ -68,6 +68,7 @@ class GMSafetyFlags(IntFlag):
   FLAG_GM_GAS_INTERCEPTOR = 16
   FLAG_GM_PEDAL_LONG = 32  # TODO: This can be inferred
   FLAG_GM_HW_ASCM_LONG = 64
+  FLAG_GM_CC_LONG = 128
 
 
 @dataclass
@@ -266,6 +267,7 @@ class CanBus:
 class GMFlags(IntFlag):
   NO_CAMERA = 1
   PEDAL_LONG = 2
+  CC_LONG = 4
 
 
 # In a Data Module, an identifier is a string used to recognize an object,
