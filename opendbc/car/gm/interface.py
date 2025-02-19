@@ -91,7 +91,7 @@ class CarInterface(CarInterfaceBase):
     ret.enableBsm = 0x142 in fingerprint[CanBus.POWERTRAIN]
     if PEDAL_MSG in fingerprint[0]:
       ret.enableGasInterceptorDEPRECATED = True
-      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_GAS_INTERCEPTOR
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_GAS_INTERCEPTOR.value
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
@@ -138,7 +138,7 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiV = [2.4, 1.5]
       if ret.enableGasInterceptorDEPRECATED:
         # Need to set ASCM long limits when using pedal interceptor, instead of camera ACC long limits
-        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_ASCM_LONG
+        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_ASCM_LONG.value
 
     # These cars have been put into dashcam only due to both a lack of users and test coverage.
     # These cars likely still work fine. Once a user confirms each car works and a test route is
@@ -234,7 +234,7 @@ class CarInterface(CarInterfaceBase):
 
     if ret.enableGasInterceptorDEPRECATED:
       ret.networkLocation = NetworkLocation.fwdCamera
-      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_CAM
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_CAM.value
       ret.minEnableSpeed = -1
       ret.pcmCruise = False
       ret.openpilotLongitudinalControl = True
@@ -242,21 +242,21 @@ class CarInterface(CarInterfaceBase):
 
       if candidate in CC_ONLY_CAR:
         ret.flags |= GMFlags.PEDAL_LONG.value
-        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_PEDAL_LONG
+        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_PEDAL_LONG.value
         # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kiBP = [0.0, 5., 35.]
         ret.longitudinalTuning.kiV = [0.0, 0.35, 0.5]
         ret.longitudinalTuning.kf = 0.15
         ret.stoppingDecelRate = 0.8
       else:  # Pedal used for SNG, ACC for longitudinal control otherwise
-        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_CAM_LONG
+        ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_HW_CAM_LONG.value
         ret.startingState = True
         ret.vEgoStopping = 0.25
         ret.vEgoStarting = 0.25
 
     elif candidate in CC_ONLY_CAR:
       ret.experimentalLongitudinalAvailable = True
-      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_CC_LONG
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_CC_LONG.value
       if experimental_long:
         ret.openpilotLongitudinalControl = True
         ret.flags |= GMFlags.CC_LONG.value
@@ -265,12 +265,12 @@ class CarInterface(CarInterfaceBase):
       ret.pcmCruise = True
 
     if candidate in CC_ONLY_CAR:
-      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_ACC
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_ACC.value
 
     # Exception for flashed cars, or cars whose camera was removed
     if (ret.networkLocation == NetworkLocation.fwdCamera or candidate in CC_ONLY_CAR) \
       and CAM_MSG not in fingerprint[CanBus.CAMERA] and not candidate in SDGM_CAR:
       ret.flags |= GMFlags.NO_CAMERA.value
-      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_CAMERA
+      ret.safetyConfigs[0].safetyParam |= GMSafetyFlags.FLAG_GM_NO_CAMERA.value
 
     return ret
