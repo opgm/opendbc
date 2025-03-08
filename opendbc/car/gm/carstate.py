@@ -237,8 +237,6 @@ class CarState(CarStateBase):
       ("ASCMLKASteeringCmd", 0),
     ]
 
-    if CP.carFingerprint == CAR.BUICK_LACROSSE:
-      assert not CP.enableGasInterceptorDEPRECATED
     return {
       Bus.pt: CANParser(DBC[CP.carFingerprint][Bus.pt], pt_messages, 0),
       Bus.cam: CANParser(DBC[CP.carFingerprint][Bus.pt], cam_messages, 2),
