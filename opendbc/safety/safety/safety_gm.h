@@ -22,7 +22,6 @@ static bool gm_skip_relay_check = false;
 static bool gm_has_acc = true;
 static bool gm_pedal_long = false;
 static bool gm_cc_long = false;
-static bool gm_force_ascm = false;
 
 static void gm_rx_hook(const CANPacket_t *to_push) {
 
@@ -189,7 +188,7 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
     bool allowed_btn = (button == GM_BTN_CANCEL) && cruise_engaged_prev;
     // For standard CC, allow spamming of SET / RESUME
     if (gm_cc_long) {
-      allowed_btn |= cruise_engaged_prev && (button == GM_BTN_SET || button == GM_BTN_RESUME || button == GM_BTN_UNPRESS);
+      allowed_btn |= cruise_engaged_prev && ((button == GM_BTN_SET) || (button == GM_BTN_RESUME) || (button == GM_BTN_UNPRESS));
     }
 
     if (!allowed_btn) {
@@ -275,9 +274,9 @@ static safety_config gm_init(uint16_t param) {
   gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
 
   const uint16_t GM_PARAM_HW_ASCM_LONG = 64;
-  gm_force_ascm = GET_FLAG(param, GM_PARAM_HW_ASCM_LONG);
+  bool gm_force_ascm = GET_FLAG(param, GM_PARAM_HW_ASCM_LONG);
 
-  if (gm_hw == GM_ASCM || gm_force_ascm) {
+  if ((gm_hw == GM_ASCM) || gm_force_ascm) {
     gm_long_limits = &GM_ASCM_LONG_LIMITS;
   } else if (gm_hw == GM_CAM) {
     gm_long_limits = &GM_CAM_LONG_LIMITS;
