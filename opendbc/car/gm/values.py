@@ -122,7 +122,6 @@ class CAR(Platforms):
   CHEVROLET_VOLT = GMASCMPlatformConfig(
     [GMCarDocs("Chevrolet Volt 2017-18", min_enable_speed=0, video_link="https://youtu.be/QeMCN_4TFfQ")],
     GMCarSpecs(mass=1607, wheelbase=2.69, steerRatio=17.7, centerToFrontRatio=0.45, tireStiffnessFactor=0.469, minEnableSpeed=-1),
-    dbc_dict=DbcDict({Bus.pt: 'gm_global_a_powertrain_volt', Bus.radar: 'gm_global_a_object', Bus.chassis: 'gm_global_a_chassis'}),
   )
   CADILLAC_ATS = GMASCMPlatformConfig(
     [GMCarDocs("Cadillac ATS Premium Performance 2018")],
@@ -196,10 +195,10 @@ class CAR(Platforms):
   )
   # Separate car def is required when there is no ASCM
   # (for now) unless there is a way to detect it when it has been unplugged...
-  CHEVROLET_VOLT_CC = GMPlatformConfig(
-    [GMCarDocs("Chevrolet Volt LT 2017-18")],
-    CHEVROLET_VOLT.specs,
-  )
+  # CHEVROLET_VOLT_CC = GMPlatformConfig(  # Unable to discern between this and w/ ACC
+  #   [GMCarDocs("Chevrolet Volt LT 2017-18")],
+  #   CHEVROLET_VOLT.specs,
+  # )
   CHEVROLET_BOLT_2017 = GMPlatformConfig(
     [GMCarDocs("Chevrolet Bolt EV 2017")],
     CHEVROLET_BOLT_EUV.specs,
@@ -219,13 +218,9 @@ class CAR(Platforms):
     [GMCarDocs("Chevrolet Equinox NO ACC 2019-22")],
     CHEVROLET_EQUINOX.specs,
   )
-  CHEVROLET_SUBURBAN = GMPlatformConfig(
-    [GMCarDocs("Chevrolet Suburban Premier 2016-20")],
-    CarSpecs(mass=2731, wheelbase=3.302, steerRatio=17.3, centerToFrontRatio=0.49),
-  )
   CHEVROLET_SUBURBAN_CC = GMPlatformConfig(
-    [GMCarDocs("Chevrolet Suburban 2016-20")],
-    CHEVROLET_SUBURBAN.specs,
+    [GMCarDocs("Chevrolet Suburban NO ACC 2016-20")],
+    CarSpecs(mass=2731, wheelbase=3.302, steerRatio=17.3, centerToFrontRatio=0.49),
   )
   CADILLAC_CT6_CC = GMPlatformConfig(
     [GMCarDocs("Cadillac CT6 No ACC")],
@@ -323,8 +318,13 @@ FW_QUERY_CONFIG = FwQueryConfig(
 )
 
 # TODO: detect most of these sets live
-EV_CAR = {CAR.CHEVROLET_VOLT, CAR.CHEVROLET_VOLT_2019, CAR.CHEVROLET_BOLT_EUV, CAR.CHEVROLET_VOLT_CC, CAR.CHEVROLET_BOLT_2017, CAR.CHEVROLET_BOLT_2018, CAR.CHEVROLET_BOLT_CC}
-CC_ONLY_CAR = {CAR.CHEVROLET_VOLT_CC, CAR.CHEVROLET_BOLT_2017, CAR.CHEVROLET_BOLT_2018, CAR.CHEVROLET_BOLT_CC, CAR.CHEVROLET_EQUINOX_CC, CAR.CHEVROLET_SUBURBAN_CC, CAR.CADILLAC_CT6_CC, CAR.CHEVROLET_TRAILBLAZER_CC, CAR.CHEVROLET_MALIBU_CC, CAR.CADILLAC_XT5_CC}
+EV_CAR = {CAR.CHEVROLET_VOLT, CAR.CHEVROLET_VOLT_2019, CAR.CHEVROLET_BOLT_EUV, # CAR.CHEVROLET_VOLT_CC,
+          CAR.CHEVROLET_BOLT_2017, CAR.CHEVROLET_BOLT_2018, CAR.CHEVROLET_BOLT_CC}
+CC_ONLY_CAR = {
+  #CAR.CHEVROLET_VOLT_CC,
+  CAR.CHEVROLET_BOLT_2017, CAR.CHEVROLET_BOLT_2018, CAR.CHEVROLET_BOLT_CC,
+  CAR.CHEVROLET_EQUINOX_CC, CAR.CHEVROLET_SUBURBAN_CC, CAR.CADILLAC_CT6_CC, CAR.CHEVROLET_TRAILBLAZER_CC,
+  CAR.CHEVROLET_MALIBU_CC, CAR.CADILLAC_XT5_CC}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.CHEVROLET_BOLT_EUV, CAR.CHEVROLET_SILVERADO, CAR.CHEVROLET_EQUINOX, CAR.CHEVROLET_TRAILBLAZER, CAR.GMC_YUKON}

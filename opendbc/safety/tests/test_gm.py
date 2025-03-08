@@ -241,10 +241,10 @@ class TestGmInterceptorSafety(common.GasInterceptorSafetyTest, TestGmCameraSafet
   def setUp(self):
     self.packer = CANPackerPanda("gm_global_a_powertrain_generated")
     self.packer_chassis = CANPackerPanda("gm_global_a_chassis")
-    self.safety = libpanda_py.libpanda
+    self.safety = libsafety_py.libsafety
     self.safety.set_safety_hooks(
-      Panda.SAFETY_GM,
-      Panda.FLAG_GM_HW_CAM | Panda.FLAG_GM_NO_ACC | Panda.FLAG_GM_PEDAL_LONG | Panda.FLAG_GM_GAS_INTERCEPTOR)
+      CarParams.SafetyModel.gm,
+      GMSafetyFlags.HW_CAM | GMSafetyFlags.FLAG_GM_NO_ACC | GMSafetyFlags.FLAG_GM_PEDAL_LONG | GMSafetyFlags.FLAG_GM_GAS_INTERCEPTOR)
     self.safety.init_tests()
 
   def test_pcm_sets_cruise_engaged(self):
@@ -322,8 +322,8 @@ class TestGmCcLongitudinalSafety(TestGmCameraSafety):
   def setUp(self):
     self.packer = CANPackerPanda("gm_global_a_powertrain_generated")
     self.packer_chassis = CANPackerPanda("gm_global_a_chassis")
-    self.safety = libpanda_py.libpanda
-    self.safety.set_safety_hooks(Panda.SAFETY_GM, Panda.FLAG_GM_HW_CAM | Panda.FLAG_GM_NO_ACC | Panda.FLAG_GM_CC_LONG)
+    self.safety = libsafety_py.libsafety
+    self.safety.set_safety_hooks(CarParams.SafetyModel.gm, GMSafetyFlags.HW_CAM | GMSafetyFlags.FLAG_GM_NO_ACC | GMSafetyFlags.FLAG_GM_CC_LONG)
     self.safety.init_tests()
 
   def _pcm_status_msg(self, enable):

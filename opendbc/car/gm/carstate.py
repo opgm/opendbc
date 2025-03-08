@@ -5,8 +5,9 @@ from opendbc.can.parser import CANParser
 from opendbc.car import Bus, create_button_events, structs
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.interfaces import CarStateBase
-from opendbc.car.gm.values import DBC, AccState, CruiseButtons, STEER_THRESHOLD, SDGM_CAR, ALT_ACCS, GMFlags, CC_ONLY_CAR, \
-  CAMERA_ACC_CAR
+from opendbc.car.gm.values import DBC, AccState, CruiseButtons, STEER_THRESHOLD, SDGM_CAR, ALT_ACCS, GMFlags, \
+  CC_ONLY_CAR, \
+  CAMERA_ACC_CAR, CAR
 
 ButtonType = structs.CarState.ButtonEvent.Type
 TransmissionType = structs.CarParams.TransmissionType
@@ -229,11 +230,15 @@ class CarState(CarStateBase):
         cam_messages += [
           ("AEBCmd", 10),
         ]
+    elif CP.carFingerprint in CC_ONLY_CAR:
+      pt_messages.append(("ECMCruiseControl", 10))
 
     loopback_messages = [
       ("ASCMLKASteeringCmd", 0),
     ]
 
+    if CP.carFingerprint == CAR.BUICK_LACROSSE:
+      assert not CP.enableGasInterceptorDEPRECATED
     return {
       Bus.pt: CANParser(DBC[CP.carFingerprint][Bus.pt], pt_messages, 0),
       Bus.cam: CANParser(DBC[CP.carFingerprint][Bus.pt], cam_messages, 2),
