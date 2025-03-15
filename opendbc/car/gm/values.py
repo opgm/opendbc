@@ -82,6 +82,7 @@ class GMCarDocs(CarDocs):
 @dataclass(frozen=True, kw_only=True)
 class GMCarSpecs(CarSpecs):
   tireStiffnessFactor: float = 0.444  # not optimized yet
+  wheelRadius: float = 0.32  # 17" wheels + 215/50R17 tires
 
 
 @dataclass
