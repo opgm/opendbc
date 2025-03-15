@@ -1,6 +1,8 @@
+from math import sin
+
 import numpy as np
 from opendbc.can.packer import CANPacker
-from opendbc.car import Bus, DT_CTRL, apply_driver_steer_torque_limits, structs
+from opendbc.car import Bus, DT_CTRL, apply_driver_steer_torque_limits, structs, ACCELERATION_DUE_TO_GRAVITY
 from opendbc.car.gm import gmcan
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons
@@ -35,6 +37,15 @@ class CarController(CarControllerBase):
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint][Bus.pt])
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint][Bus.radar])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint][Bus.chassis])
+
+  def accel_to_torque(self, accel, CS, theta):
+    """Converts desired linear acceleration into ACC torque."""
+    # tau = r * (F_linear + F_gravity + F_drag)
+    return self.CP.wheelRadius * (
+      self.CP.mass * accel +
+      self.CP.mass * ACCELERATION_DUE_TO_GRAVITY * sin(theta) +
+      self.params.DRAG_CONSTANT * CS.out.vEgo ** 2
+    )
 
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
@@ -86,15 +97,20 @@ class CarController(CarControllerBase):
         stopping = actuators.longControlState == LongCtrlState.stopping
         if not CC.longActive:
           # ASCM sends max regen when not enabled
-          self.apply_gas = self.params.INACTIVE_REGEN
+          self.apply_gas = self.params.INACTIVE_TORQUE
           self.apply_brake = 0
         else:
-          self.apply_gas = int(round(np.interp(actuators.accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
-          self.apply_brake = int(round(np.interp(actuators.accel, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
+          accel = np.clip(actuators.accel, self.params.ACCEL_MIN, self.params.ACCEL_MAX)
+          torque = self.accel_to_torque(accel, CS, 0)  # TODO: add pitch angle
+          brake_accel = min((torque - self.params.BRAKE_THRESHOLD) / (self.CP.wheelRadius * self.CP.mass), 0)
+
+          self.apply_brake = int(round(np.interp(brake_accel, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
           # Don't allow any gas above inactive regen while stopping
           # FIXME: brakes aren't applied immediately when enabling at a stop
-          if stopping:
-            self.apply_gas = self.params.INACTIVE_REGEN
+          if self.apply_brake > 0 or stopping:
+            self.apply_gas = self.params.INACTIVE_TORQUE
+          else:
+            self.apply_gas = int(round(np.clip(torque, self.params.MIN_TORQUE, self.params.MAX_TORQUE)))
 
         idx = (self.frame // 4) % 4
 
