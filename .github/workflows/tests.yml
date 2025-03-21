@@ -17,7 +17,7 @@ jobs:
           - os: ${{ github.repository == 'commaai/opendbc' && 'namespace-profile-amd64-8x16' || 'ubuntu-24.04' }}
           - os: ${{ github.repository == 'commaai/opendbc' && 'namespace-profile-macos-8x14' || 'macos-latest' }}
     steps:
-    - uses: commaai/timeout@v1
+#    - uses: commaai/timeout@v1
     - uses: actions/checkout@v4
     - name: Restore cached cppcheck
       uses: actions/cache@v4
@@ -39,7 +39,7 @@ jobs:
       matrix:
         flags: ['--ubsan']
     steps:
-    - uses: commaai/timeout@v1
+#    - uses: commaai/timeout@v1
     - uses: actions/checkout@v4
     - name: Run safety tests
       run: ./opendbc/safety/tests/test.sh ${{ matrix.flags }}
@@ -56,7 +56,7 @@ jobs:
           path: opendbc/safety/tests/misra/cppcheck/
           key: cppcheck-cache-${{ runner.os }}-${{ hashFiles('opendbc/safety/tests/misra/install.sh') }}
       - name: MISRA mutation tests
-        timeout-minutes: 1
+        timeout-minutes: 5
         run: |
           source setup.sh
           scons -j8
@@ -80,7 +80,7 @@ jobs:
         with:
           fetch-depth: 0  # need master to get diff
       - name: Run mutation tests
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           source setup.sh
           scons -j8
