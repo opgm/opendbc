@@ -1,0 +1,36 @@
+name: Daily Rebase
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure full history for rebase
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add remote and fetch latest changes
+        run: |
+          git remote add upstream https://github.com/commaai/opendbc.git
+          git fetch upstream master
+
+      - name: Rebase onto upstream master
+        run: |
+          git checkout $(git rev-parse --abbrev-ref HEAD)
+          git rebase upstream/master
+
+      - name: Push changes
+        run: |
+          git push --force-with-lease origin $(git rev-parse --abbrev-ref HEAD)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
