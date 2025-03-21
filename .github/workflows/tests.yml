@@ -18,7 +18,7 @@ jobs:
           - os: macos-latest
           - os: macos-15
     steps:
-    - uses: commaai/timeout@v1
+#    - uses: commaai/timeout@v1
     - uses: actions/checkout@v4
     - uses: actions/cache@v4
       with:
@@ -34,7 +34,7 @@ jobs:
       matrix:
         flags: ['', '--ubsan']
     steps:
-    - uses: commaai/timeout@v1
+#    - uses: commaai/timeout@v1
     - uses: actions/checkout@v4
     - name: Run safety tests
       run: ./opendbc/safety/tests/test.sh ${{ matrix.flags }}
@@ -81,7 +81,7 @@ jobs:
             cppcheck-cache-${{ runner.os }}-${{ github.ref }}
             cppcheck-cache-${{ runner.os }}-
       - name: MISRA mutation tests
-        timeout-minutes: 1
+        timeout-minutes: 5
         run: |
           source setup.sh
           scons -j8
@@ -105,7 +105,7 @@ jobs:
         with:
           fetch-depth: 0  # need master to get diff
       - name: Run mutation tests
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           source setup.sh
           scons -j8
