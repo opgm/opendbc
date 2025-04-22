@@ -37,7 +37,7 @@ static bool gm_cc_long = false;
 static void gm_rx_hook(const CANPacket_t *to_push) {
 
   const int GM_STANDSTILL_THRSLD = 10;  // 0.311kph
-  const int GM_GAS_INTERCEPTOR_THRESHOLD = 550;
+  const int GM_GAS_INTERCEPTOR_THRESHOLD = 595;
   #define GM_GET_INTERCEPTOR(msg) (((GET_BYTE((msg), 0) << 8) + GET_BYTE((msg), 1) + (GET_BYTE((msg), 2) << 8) + GET_BYTE((msg), 3)) / 2U) // avg between 2 tracks
 
   if (GET_BUS(to_push) == 0U) {
