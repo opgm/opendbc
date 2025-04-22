@@ -106,8 +106,8 @@ class CarState(CarStateBase):
 
     if self.CP.enableGasInterceptorDEPRECATED:
       ret.gas = (pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS"] + pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS2"]) / 2.
-      # Panda 515 threshold = 10.88. Set lower to avoid panda blocking messages and GasInterceptor faulting.
-      threshold = 20 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4
+      # Panda 595 threshold = 12.57. Set lower to avoid panda blocking messages and GasInterceptor faulting.
+      threshold = 12 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4
       ret.gasPressed = ret.gas > threshold
     else:
       ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
