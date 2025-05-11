@@ -309,14 +309,9 @@ class TestGmInterceptorSafety(common.GasInterceptorSafetyTest, TestGmCameraSafet
 
 
 class TestGmCcLongitudinalSafety(TestGmCameraSafety):
-  TX_MSGS = [[384, 0], [481, 0], [388, 2]]
-  FWD_BLACKLISTED_ADDRS = {2: [384], 0: [388]}  # block LKAS message and PSCMStatus
+  TX_MSGS = [[0x180, 0], [0x1E1, 0], [0x184, 2]]
+  FWD_BLACKLISTED_ADDRS = {2: [0x180], 0: [0x184]}  # block LKAS message and PSCMStatus
   BUTTONS_BUS = 0  # tx only
-
-  MAX_GAS = 3400
-  MAX_REGEN = 1514
-  INACTIVE_REGEN = 1554
-  MAX_BRAKE = 400
 
   def setUp(self):
     self.packer = CANPackerPanda("gm_global_a_powertrain_generated")
