@@ -319,7 +319,7 @@ static safety_config gm_init(uint16_t param) {
   } else {}
 
   // ASCM does not forward any messages
-  if (gm_hw == GM_ASCM) {
+  if ((gm_hw == GM_ASCM) || gm_cc_long) {
     ret.disable_forwarding = true;
   }
   return ret;
