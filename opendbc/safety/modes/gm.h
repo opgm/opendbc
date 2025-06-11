@@ -212,9 +212,19 @@ static safety_config gm_init(uint16_t param) {
     .max_brake = 400,
   };
 
-  static const CanMsg GM_ASCM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x409, 0, 7, .check_relay = false}, {0x40A, 0, 7, .check_relay = false}, {0x2CB, 0, 8, .check_relay = true}, {0x370, 0, 6, .check_relay = false}, {0x200, 0, 6, .check_relay = false},  // pt bus
-                                           {0xA1, 1, 7, .check_relay = false}, {0x306, 1, 8, .check_relay = false}, {0x308, 1, 7, .check_relay = false}, {0x310, 1, 2, .check_relay = false},   // obs bus
-                                           {0x315, 2, 5, .check_relay = false}};  // ch bus
+  static const CanMsg GM_ASCM_TX_MSGS[] = {
+    {0x180, 0, 4, .check_relay = true},
+    {0x409, 0, 7, .check_relay = false},
+    {0x40A, 0, 7, .check_relay = false},
+    {0x2CB, 0, 8, .check_relay = true},
+    {0x370, 0, 6, .check_relay = false},
+    {0x200, 0, 6, .check_relay = false},  // pt bus
+    {0xA1, 1, 7, .check_relay = false},
+    {0x306, 1, 8, .check_relay = false},
+    {0x308, 1, 7, .check_relay = false},
+    {0x310, 1, 2, .check_relay = false},   // obs bus
+    {0x315, 2, 5, .check_relay = false}
+  };  // ch bus
 
 
   static const LongitudinalLimits GM_CAM_LONG_LIMITS = {
@@ -225,8 +235,15 @@ static safety_config gm_init(uint16_t param) {
   };
 
   // block PSCMStatus (0x184); forwarded through openpilot to hide an alert from the camera
-  static const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x315, 0, 5, .check_relay = true}, {0x2CB, 0, 8, .check_relay = true}, {0x370, 0, 6, .check_relay = true}, {0x200, 0, 6, .check_relay = false},  // pt bus
-                                               {0x184, 2, 8, .check_relay = true}};  // camera bus
+  static const CanMsg GM_CAM_LONG_TX_MSGS[] = {
+    {0x180, 0, 4, .check_relay = true},
+    {0x1E1, 0, 7, .check_relay = false},
+    {0x315, 0, 5, .check_relay = true},
+    {0x2CB, 0, 8, .check_relay = true},
+    {0x370, 0, 6, .check_relay = true},
+    {0x200, 0, 6, .check_relay = false},  // pt bus
+    {0x184, 2, 8, .check_relay = true}
+  };  // camera bus
 
 
   static RxCheck gm_rx_checks[] = {
@@ -258,12 +275,12 @@ static safety_config gm_init(uint16_t param) {
     {.msg = {{0x201, 0, 6, .ignore_checksum = true, .ignore_counter = true, .frequency = 10U}, { 0 }, { 0 }}},  // pedal
   };
 
-  static const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x200, 0, 6, .check_relay = false},  // pt bus
+  static const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x1E1, 0, 7, .check_relay = false}, {0x200, 0, 6, .check_relay = false},  // pt bus
                                           {0x1E1, 2, 7, .check_relay = false}, {0x184, 2, 8, .check_relay = true}};  // camera bus
 
 
   static const CanMsg GM_CC_LONG_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x1E1, 0, 7, .check_relay = false},  // pt bus
-                                              {0x184, 2, 8, .check_relay = true}, {0x1E1, 2, 7, .check_relay = false}};  // camera bus
+                                              {0x1E1, 0, 7, .check_relay = false}, {0x184, 2, 8, .check_relay = true}};  // camera bus
 
 
   gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
