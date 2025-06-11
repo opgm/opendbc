@@ -1,10 +1,8 @@
 from typing import Literal
-
 from opendbc.car import DT_CTRL
 from opendbc.car.can_definitions import CanData
 from opendbc.car.gm.values import CAR, CruiseButtons, CanBus
 from opendbc.car.common.conversions import Conversions as CV
-
 
 def create_buttons(packer, bus, idx, button):
   values = {
@@ -192,7 +190,6 @@ def _create_gm_cc_spam_command_velocity(controller, CS, actuators):
 
   return button
 
-
 def _create_gm_cc_spam_command_accel(controller, CS, actuators):
   # if controller.params_.get_bool("IsMetric"):
   #   _CV = CV.MS_TO_KPH
@@ -231,8 +228,8 @@ def _create_gm_cc_spam_command_accel(controller, CS, actuators):
 
   return button, rate
 
+def create_gm_cc_spam_command(packer, controller, CS, actuators, mode: Literal["velocity", "accel"] = "accel"):
 
-def create_gm_cc_spam_command(packer, controller, CS, actuators, mode: Literal["velocity", "accel"] = "velocity"):
   if mode == "velocity":
     button = _create_gm_cc_spam_command_velocity(controller, CS, actuators)
     rate = 0.04
@@ -241,8 +238,6 @@ def create_gm_cc_spam_command(packer, controller, CS, actuators, mode: Literal["
   else:
     raise ValueError("Invalid mode. Use 'velocity' or 'accel'.")
 
-  # Check rlogs closely - our message shouldn't show up on the pt bus for us
-  # Or bus 2, since we're forwarding... but I think it does
   if (button != CruiseButtons.INIT) and ((controller.frame - controller.last_button_frame) * DT_CTRL > rate):
     controller.last_button_frame = controller.frame
     idx = (CS.buttons_counter + 1) % 4  # Need to predict the next idx for '22-23 EUV
