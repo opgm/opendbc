@@ -38,6 +38,8 @@ class CarController(CarControllerBase):
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint][Bus.radar])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint][Bus.chassis])
 
+    self.prev_op_enabled = False
+
   @staticmethod
   def calc_pedal_command(accel: float, long_active: bool, v_ego: float) -> float:
     if not long_active:
@@ -163,11 +165,19 @@ class CarController(CarControllerBase):
       if self.CP.networkLocation == NetworkLocation.gateway and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
         can_sends += gmcan.create_adas_keepalive(CanBus.POWERTRAIN)
 
-      # TODO: integrate this with the code block below?
-      if (
-          (self.CP.flags & GMFlags.PEDAL_LONG.value)  # Always cancel stock CC when using pedal interceptor
-          or (self.CP.flags & GMFlags.CC_LONG.value and not CC.enabled)  # Cancel stock CC if OP is not active
-      ) and CS.out.cruiseState.enabled:
+      # Pedal interceptor: always send CANCEL when cruise is on
+      if (self.CP.flags & GMFlags.PEDAL_LONG.value) and CS.out.cruiseState.enabled:
+        if (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
+          self.last_button_frame = self.frame
+          can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, (CS.buttons_counter + 1) % 4, CruiseButtons.CANCEL))
+
+      # CC_LONG: only send CANCEL on OP disengage when cruise is still on
+      elif (
+          (self.CP.flags & GMFlags.CC_LONG.value)
+          and self.prev_op_enabled
+          and not CC.enabled
+          and CS.out.cruiseState.enabled
+      ):
         if (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
           self.last_button_frame = self.frame
           can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, (CS.buttons_counter + 1) % 4, CruiseButtons.CANCEL))
@@ -195,5 +205,6 @@ class CarController(CarControllerBase):
     new_actuators.brake = self.apply_brake
     new_actuators.speed = self.apply_speed
 
+    self.prev_op_enabled = CC.enabled
     self.frame += 1
     return new_actuators, can_sends
