@@ -266,7 +266,7 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.deadzoneVDEPRECATED = [0.56]  # == 2 km/h/s, 1.25 mph/s
       ret.longitudinalActuatorDelay = 1.  # TODO: measure this
       ret.longitudinalTuning.kiBP = [0.]
-      ret.longitudinalTuning.kiV = [0.12]
+      ret.longitudinalTuning.kiV = [0.1]
       ret.stoppingDecelRate = 11.18  # == 25 mph/s (.04 rate)
       ret.longitudinalTuning.kf = 0.
 
