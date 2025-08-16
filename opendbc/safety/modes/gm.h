@@ -7,11 +7,13 @@
     {.msg = {{0x184, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
     {.msg = {{0x34A, 0, 5, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
     {.msg = {{0x1E1, 0, 7, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0x1C4, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0xC9, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+
+#define GM_ACC_RX_CHECKS \
     {.msg = {{0xBE, 0, 6, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true},    /* Volt, Silverado, Acadia Denali */ \
              {0xBE, 0, 7, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true},    /* Bolt EUV */ \
              {0xBE, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}}},  /* Escalade */ \
-    {.msg = {{0x1C4, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
-    {.msg = {{0xC9, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
 
 static const LongitudinalLimits *gm_long_limits;
 
@@ -28,6 +30,7 @@ typedef enum {
 } GmHardware;
 static GmHardware gm_hw = GM_ASCM;
 static bool gm_pcm_cruise = false;
+static bool gm_has_acc = true;
 
 static void gm_rx_hook(const CANPacket_t *msg) {
   const int GM_STANDSTILL_THRSLD = 10;  // 0.311kph
@@ -80,10 +83,16 @@ static void gm_rx_hook(const CANPacket_t *msg) {
       gas_pressed = msg->data[5] != 0U;
 
       // enter controls on rising edge of ACC, exit controls when ACC off
-      if (gm_pcm_cruise) {
+      if (gm_pcm_cruise && gm_has_acc) {
         bool cruise_engaged = (msg->data[1] >> 5) != 0U;
         pcm_cruise_check(cruise_engaged);
       }
+    }
+
+    // Cruise check for CC only cars
+    if ((msg->addr == 0x3D1U) && !gm_has_acc) {
+      bool cruise_engaged = (msg->data[4] >> 7) != 0U;
+      cruise_engaged_prev = cruise_engaged;
     }
 
     if (msg->addr == 0xBDU) {
@@ -188,10 +197,12 @@ static safety_config gm_init(uint16_t param) {
 
   static RxCheck gm_rx_checks[] = {
     GM_COMMON_RX_CHECKS
+    GM_ACC_RX_CHECKS
   };
 
   static RxCheck gm_ev_rx_checks[] = {
     GM_COMMON_RX_CHECKS
+    GM_ACC_RX_CHECKS
     {.msg = {{0xBD, 0, 7, 40U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},
   };
 
@@ -214,6 +225,9 @@ static safety_config gm_init(uint16_t param) {
   gm_cam_long = GET_FLAG(param, GM_PARAM_HW_CAM_LONG);
 #endif
   gm_pcm_cruise = (gm_hw == GM_CAM) && !gm_cam_long;
+
+  const uint16_t GM_PARAM_NO_ACC = 8;
+  gm_has_acc = !GET_FLAG(param, GM_PARAM_NO_ACC);
 
   safety_config ret;
   if (gm_hw == GM_CAM) {
