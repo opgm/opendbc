@@ -3,7 +3,7 @@ from opendbc.can import CANDefine, CANParser
 from opendbc.car import Bus, create_button_events, structs
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.interfaces import CarStateBase
-from opendbc.car.gm.values import DBC, AccState, CruiseButtons, STEER_THRESHOLD, SDGM_CAR, ALT_ACCS, CC_ONLY_CAR, \
+from opendbc.car.gm.values import CAR, DBC, AccState, CruiseButtons, STEER_THRESHOLD, SDGM_CAR, ALT_ACCS, CC_ONLY_CAR, \
   CAMERA_ACC_CAR
 
 ButtonType = structs.CarState.ButtonEvent.Type
@@ -12,6 +12,7 @@ NetworkLocation = structs.CarParams.NetworkLocation
 GearShifter = structs.CarState.GearShifter
 
 STANDSTILL_THRESHOLD = 10 * 0.0311
+VOLT_EBCM_BRAKE_PRESSED_THRESHOLD = 6
 
 BUTTONS_DICT = {CruiseButtons.RES_ACCEL: ButtonType.accelCruise, CruiseButtons.DECEL_SET: ButtonType.decelCruise,
                 CruiseButtons.MAIN: ButtonType.mainCruise, CruiseButtons.CANCEL: ButtonType.cancel}
@@ -87,14 +88,16 @@ class CarState(CarStateBase):
     else:
       ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL2"]["PRNDL2"], None))
 
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
-      ret.brakePressed = pt_cp.vl["ECMEngineStatus"]["BrakePressed"] != 0
+    if self.CP.carFingerprint == CAR.CHEVROLET_VOLT:
+      ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]["BrakePedalPosition"]
+      ret.brakePressed = ret.brake >= VOLT_EBCM_BRAKE_PRESSED_THRESHOLD
     else:
+      ret.brake = pt_cp.vl["ECMAcceleratorPos"]["BrakePedalPos"]
       # Some Volt 2016-17 have loose brake pedal push rod retainers which causes the ECM to believe
       # that the brake is being intermittently pressed without user interaction.
       # To avoid a cruise fault we need to use a conservative brake position threshold
       # https://static.nhtsa.gov/odi/tsbs/2017/MC-10137629-9999.pdf
-      ret.brakePressed = pt_cp.vl["ECMAcceleratorPos"]["BrakePedalPos"] >= 8
+      ret.brakePressed = pt_cp.vl["ECMEngineStatus"]["BrakePressed"] != 0 if self.CP.networkLocation == NetworkLocation.fwdCamera else ret.brake >= 8
 
     # Regen braking is braking
     if self.CP.transmissionType == TransmissionType.direct:

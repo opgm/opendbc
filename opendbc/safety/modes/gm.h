@@ -15,6 +15,14 @@
              {0xBE, 0, 7, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true},    /* Bolt EUV */ \
              {0xBE, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}}},  /* Escalade */ \
 
+#define GM_COMMON_RX_CHECKS_ALT_BRAKE \
+    {.msg = {{0x184, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0x34A, 0, 5, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0x1E1, 0, 7, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0xF1, 0, 6, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0x1C4, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+    {.msg = {{0xC9, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}}, \
+
 static const LongitudinalLimits *gm_long_limits;
 
 enum {
@@ -33,6 +41,7 @@ static bool gm_pcm_cruise = false;
 static bool gm_has_acc = true;
 static bool gm_pedal_long = false;
 static bool gm_cc_long = false;
+static bool gm_ev = false;
 
 static void gm_rx_hook(const CANPacket_t *msg) {
   const int GM_STANDSTILL_THRSLD = 10;  // 0.311kph
@@ -74,8 +83,12 @@ static void gm_rx_hook(const CANPacket_t *msg) {
 
     // Reference for brake pressed signals:
     // https://github.com/commaai/openpilot/blob/master/selfdrive/car/gm/carstate.py
-    if ((msg->addr == 0xBEU) && (gm_hw == GM_ASCM)) {
+    if ((msg->addr == 0xBEU) && (gm_hw == GM_ASCM) && !gm_ev) {
       brake_pressed = msg->data[1] >= 8U;
+    }
+
+    if ((msg->addr == 0xF1U) && (gm_hw == GM_ASCM) && gm_ev) {
+      brake_pressed = msg->data[1] >= 6U;
     }
 
     if ((msg->addr == 0xC9U) && (gm_hw == GM_CAM)) {
@@ -255,11 +268,22 @@ static safety_config gm_init(uint16_t param) {
     {.msg = {{0x3D1, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // Non-ACC PCM
   };
 
+  static RxCheck gm_no_acc_ev_alt_brake_rx_checks[] = {
+    GM_COMMON_RX_CHECKS_ALT_BRAKE
+    {.msg = {{0xBD, 0, 7, 40U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},
+    {.msg = {{0x3D1, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // Non-ACC PCM
+  };
+
   static RxCheck gm_pedal_rx_checks[] = {
     GM_COMMON_RX_CHECKS
     {.msg = {{0xBD, 0, 7, 40U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},
     {.msg = {{0x3D1, 0, 8, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // Non-ACC PCM
     {.msg = {{0x201, 0, 6, 10U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // pedal
+  };
+
+  static RxCheck gm_ev_alt_brake_rx_checks[] = {
+    GM_COMMON_RX_CHECKS_ALT_BRAKE
+    {.msg = {{0xBD, 0, 7, 40U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},
   };
 
   static const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4, .check_relay = true}, {0x200, 0, 6, .check_relay = false},
@@ -271,6 +295,7 @@ static safety_config gm_init(uint16_t param) {
 
 
   gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
+  gm_ev = GET_FLAG(param, GM_PARAM_EV);
 
   if (gm_hw == GM_ASCM) {
     gm_long_limits = &GM_ASCM_LONG_LIMITS;
@@ -314,15 +339,22 @@ static safety_config gm_init(uint16_t param) {
     ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_ASCM_TX_MSGS);
   }
 
-  const bool gm_ev = GET_FLAG(param, GM_PARAM_EV);
   if (enable_gas_interceptor) {
     SET_RX_CHECKS(gm_pedal_rx_checks, ret);
   } else if (!gm_has_acc && gm_ev) {
-    SET_RX_CHECKS(gm_no_acc_ev_rx_checks, ret);
+    if (gm_hw == GM_ASCM) {
+      SET_RX_CHECKS(gm_no_acc_ev_alt_brake_rx_checks, ret);
+    } else {
+      SET_RX_CHECKS(gm_no_acc_ev_rx_checks, ret);
+    }
   } else if (!gm_has_acc && !gm_ev) {
     SET_RX_CHECKS(gm_no_acc_rx_checks, ret);
   } else if (gm_ev) {
-    SET_RX_CHECKS(gm_ev_rx_checks, ret);
+    if (gm_hw == GM_ASCM) {
+      SET_RX_CHECKS(gm_ev_alt_brake_rx_checks, ret);
+    } else {
+      SET_RX_CHECKS(gm_ev_rx_checks, ret);
+    }
   } else {}
 
   // ASCM does not forward any messages

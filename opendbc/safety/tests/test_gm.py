@@ -164,7 +164,9 @@ class TestGmAscmSafety(GmLongitudinalBase, TestGmSafetyBase):
 
 
 class TestGmAscmEVSafety(TestGmAscmSafety, TestGmEVSafetyBase):
-  pass
+  def _user_brake_msg(self, brake):
+    values = {"BrakePedalPosition": 6 if brake else 0}
+    return self.packer.make_can_msg_safety("EBCMBrakePedalPosition", 0, values)
 
 
 class TestGmCameraSafetyBase(TestGmSafetyBase):
