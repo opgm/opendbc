@@ -145,11 +145,11 @@ class TestGmEVSafetyBase(TestGmSafetyBase):
 class TestGmAscmSafety(GmLongitudinalBase, TestGmSafetyBase):
   TX_MSGS = [[0x180, 0], [0x409, 0], [0x40A, 0], [0x2CB, 0], [0x370, 0],  # pt bus
              [0xA1, 1], [0x306, 1], [0x308, 1], [0x310, 1],  # obs bus
-             [0x315, 2]]  # ch bus
+             [0x315, 0]]  # pt bus
   FWD_BLACKLISTED_ADDRS: dict[int, list[int]] = {}
-  RELAY_MALFUNCTION_ADDRS = {0: (0x180, 0x2CB)}  # ASCMLKASteeringCmd, ASCMGasRegenCmd
+  RELAY_MALFUNCTION_ADDRS = {0: (0x180, 0x2CB, 0x315)}  # ASCMLKASteeringCmd, ASCMGasRegenCmd, EBCMFrictionBrakeCmd
   FWD_BUS_LOOKUP: dict[int, int] = {}
-  BRAKE_BUS = 2
+  BRAKE_BUS = 0
 
   MAX_GAS = 1018
   MIN_GAS = -650  # maximum regen
