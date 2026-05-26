@@ -62,6 +62,8 @@ bool acc_main_on = false;  // referred to as "ACC off" in ISO 15622:2018
 int cruise_button_prev = 0;
 bool safety_rx_checks_invalid = false;
 
+// FrogPilot variables
+
 // for safety modes with torque steering control
 int desired_torque_last = 0;       // last desired steer torque
 int rt_torque_last = 0;            // last desired torque for real time check
@@ -95,6 +97,9 @@ uint16_t current_safety_mode = SAFETY_SILENT;
 uint16_t current_safety_param = 0;
 static const safety_hooks *current_hooks = &nooutput_hooks;
 safety_config current_safety_config;
+
+// OPGM variables
+bool enable_gas_interceptor = false;
 
 static void generic_rx_checks(void);
 static void stock_ecu_check(bool stock_ecu_detected);
@@ -219,6 +224,8 @@ bool safety_rx_hook(const CANPacket_t *msg) {
     heartbeat_engaged_mismatches = 0;
   }
 
+  // FrogPilot variables
+
   return valid;
 }
 
@@ -326,19 +333,15 @@ void safety_tick(const safety_config *cfg) {
       // lag threshold is max of: 1s and MAX_MISSED_MSGS * expected timestep.
       // Quite conservative to not risk false triggers.
       // 2s of lag is worse case, since the function is called at 1Hz
-      uint32_t frequency = cfg->rx_checks[i].msg[cfg->rx_checks[i].status.index].frequency;
-      uint32_t timestep = 1e6 / frequency;
+      uint32_t timestep = 1e6 / cfg->rx_checks[i].msg[cfg->rx_checks[i].status.index].frequency;
       bool lagging = elapsed_time > SAFETY_MAX(timestep * MAX_MISSED_MSGS, 1e6);
       cfg->rx_checks[i].status.lagging = lagging;
       if (lagging) {
         controls_allowed = false;
       }
 
-      // enforce minimum frequency for safety-relevant messages
-      bool frequency_invalid = frequency < 10U;
-      if (lagging || frequency_invalid || !is_msg_valid(cfg->rx_checks, i)) {
+      if (lagging || !is_msg_valid(cfg->rx_checks, i)) {
         rx_checks_invalid = true;
-        controls_allowed = false;
       }
     }
   }
@@ -370,6 +373,8 @@ static void generic_rx_checks(void) {
     controls_allowed = false;
   }
   steering_disengage_prev = steering_disengage;
+
+  // FrogPilot variables
 }
 
 static void stock_ecu_check(bool stock_ecu_detected) {
@@ -470,6 +475,9 @@ int set_safety_hooks(uint16_t mode, uint16_t param) {
   relay_malfunction_reset();
   safety_rx_checks_invalid = false;
 
+  // OPGM variables
+  enable_gas_interceptor = false;
+
   current_safety_config.rx_checks = NULL;
   current_safety_config.rx_checks_len = 0;
   current_safety_config.tx_msgs = NULL;
@@ -498,6 +506,9 @@ int set_safety_hooks(uint16_t mode, uint16_t param) {
       current_safety_config.rx_checks[j].status = (RxStatus){0};
     }
   }
+
+  // FrogPilot variables
+
   return set_status;
 }
 
